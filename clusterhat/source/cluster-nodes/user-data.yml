@@ -1,0 +1,75 @@
+#cloud-config
+
+hostname: p`'NODE
+manage_etc_hosts: true
+
+users:
+  - name: USERNAME
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users,docker,netdev,video
+    lock_passwd: true
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKqbTV/k0wS1JQiH7MIabgUccTTq5fpS2uh1YiNH7Wy1 mchester@Mikes-MacBook-Pro.local
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjdaCyxs6i02cCx5gnc9KFlOtTtp+eGhX6gE9xzEEQY mchester@mchester
+
+locale: "en_US.UTF-8"
+timezone: "UTC"
+
+# These commands will be ran once on first boot only
+runcmd:
+  - 'ln -fs /lib/systemd/system/getty@.service /etc/systemd/system/getty.target.wants/getty@ttyGS0.service'
+  - 'cat /etc/dhcpcd.conf.controller >> /etc/dhcpcd.conf'
+  - 'systemctl enable --now getty@ttyGS0.service'
+  - 'systemctl enable github-keys@USERNAME.timer'
+  - 'systemctl restart dhcpcd'
+  - 'sleep 20'
+  - "apt-get update"
+  - "apt-get install -y ntp ssh-import-id"
+
+write_files:
+  - content: |
+      [Unit]
+      Description=Import keys on boot and keep updated
+      [Timer]
+      OnBootSec=1min
+      OnUnitActiveSec=1d 
+      [Install]
+      WantedBy=timers.target
+    path: /etc/systemd/system/github-keys@.timer
+
+  - content: |
+      [Unit]
+      Description=Import keys for %i
+      Wants=network-online.target
+      After=network-online.target
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/ssh-import-id gh:%i
+      User=%i
+    path: /etc/systemd/system/github-keys@.service
+
+  # Cluster Node
+  ## Content to show on login console
+  - content: |
+      HypriotOS (Debian GNU/Linux 9) \n \l
+      usb0 - IPv4: \4{usb0} IPv6: \6{usb0}
+    path: /etc/issue
+    
+  - content: |
+      ##  Fallback ip configuration
+      profile clusterhat_fallback_usb0
+      static ip_address=172.19.181.NODE/24
+      static routers=172.19.181.254
+      static domain_name_servers=LAN_ROUTER 1.1.1.1
+
+      interface usb0
+      fallback clusterhat_fallback_usb0
+    path: /etc/dhcpcd.conf.controller
+
+power_state:
+  delay: now
+  mode: reboot
+  message: rebooting...
+  timeout: 5
+  condition: true
