@@ -1,0 +1,56 @@
+version: '3.4'
+services:
+  ui:
+    image: portainer/portainer
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
+    volumes:
+      - portainer_data:/data
+    networks:
+      - default
+      - proxy
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - com.df.notify=true
+        - com.df.servicePath=/portainer
+        - com.df.reqPathSearchReplace=/portainer,
+        - com.df.port=9000
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+  agent:
+    image: portainer/agent
+    environment:
+      AGENT_CLUSTER_ADDR: tasks.agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: global
+      update_config:
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+networks:
+  proxy:
+    external: true
+volumes:
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=172.19.181.254,v3,nolock,soft,rw
+      device: ":/nfs/portainer"

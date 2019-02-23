@@ -13,14 +13,6 @@ export INFLUXDB_ADMIN_USER=''
 export INFLUXDB_ADMIN_PASSWORD=''
 export INFLUXDB_TELEGRAF_USER=''
 export INFLUXDB_TELEGRAF_PASSWORD=''
-
-export SMTP_HOST=''
-export SMTP_USER=''
-export SMTP_PASSWORD=''
-export SMTP_FROM=''
-
-# Generate with http://www.htaccesstools.com/htpasswd-generator/
-export TRAEFIK_DASHBOARD_CREDENTIALS=''
 ```
 
 Create a `certs` directory inside `./secrets`. Generate a self-signed rootCA.
