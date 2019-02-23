@@ -1,80 +1,85 @@
 # HomeLab Stacks
 
-## Secrets
+## Scripts
 
-Create a directory called `./secrets` and inside that directory create a file `.secrets`, add the 
-following contents to the file and modify them to suit your deployment.
+### init.sh
 
-```bash
-#!/bin/bash
+This script will createh the initial Docker overlay networks and NFS directories.
 
-# InfluxDB Settings
-export INFLUXDB_ADMIN_USER=''
-export INFLUXDB_ADMIN_PASSWORD=''
-export INFLUXDB_TELEGRAF_USER=''
-export INFLUXDB_TELEGRAF_PASSWORD=''
-```
+### gen-secrets.sh
 
-Create a `certs` directory inside `./secrets`. Generate a self-signed rootCA.
-```bash
-openssl genrsa -des3 -out rootCA.key 4096
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
-```
-
-Create an `ingress` directory under `./secrets/certs` and create a new certificate and key for the ingress gateway (Traefik).
-Since Ingress will be hosting many services, We can sign the cert using SAN (Subject Alternate Names) extension.
-
-Create a file called san.cnf and add the following to it, modifying the values to suit your needs.
-```text
-[req]
-distinguished_name = req_distinguished_name
-req_extensions = v3_req
-prompt = no
-
-[req_distinguished_name]
-C = CA
-ST = BC
-L = Vancouver
-O = 
-OU = 
-CN = 
-
-[v3_req]
-keyUsage = keyEncipherment, dataEncipherment
-extendedKeyUsage = serverAuth
-subjectAltName = @alt_names
-[alt_names]
-DNS.1   = mqtt.lan  <-- list of domains ingress will be hosting
-DNS.2   = mqtt.lan  <-- list of domains ingress will be hosting
-```
-
-Then run the following to create a `server-cert.pem` and `server-key.pem` file and put them in `./secrets/certs/ingress` folder.
-```bash
-#!/bin/sh
-set +x trace
-
-openssl genrsa -out server.key 2048
-openssl req -new -key server-key.pem -out server.csr -config san.cnf
-openssl req -in server.csr -noout -text
-openssl x509 -req -in server.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out server-cert.pem -days 1000 -sha256 -extfile san.cnf -extensions v3_req
-openssl x509 -in server-cert.pem -text -noout
-rm server.csr
-```
+This script will generate the secrets directory which is used to provision the stacks secret values that are not committed.
 
 
-## Base Stack
+## Configs
 
-This stack is used to deploy the basic services (Traefik and Portainer) that can be used to deploy
-the rest of the stacks.
+### postgres_init.sh
 
-`./base/init.sh && ./base/deploy.sh`
+This script will generate the grafana user in postgres used to save grafana settings.
 
-- Access Traefik at `<dockerhost>/traefik/`
-    - Use password set in `./secrets/.secret` file.
-- Access Portainer at `<dockerhost>/portainer/`
-    - Set password on first login
+### telegraf.conf
 
-## Other Stacks
+This is the telegraf configuration file used to provision the telegraf Docker container
 
-Use Portainer to deploy the other stacks (or manually deploy them).
+
+## Stacks
+
+### database-stack.yaml
+
+#### Services
+
+- [InfluxDB](https://hub.docker.com/_/influxdb)
+    - Must be on Manager (Pi3) since no image exists for arm32v6
+    - NFS mount on Manager used for data
+- [Postgres](https://hub.docker.com/r/arm32v6/postgres/) 
+    - Can be deployed on any Pi
+    - NFS mount on Manager for data
+    
+### grafana-stack.yaml
+
+#### Services
+
+- [Grafana](https://hub.docker.com/r/grafana/grafana/)
+    - Must be on Manager (Pi3) since no image exists for arm32v6
+    - Postgres used for data
+    - `https` Access at `https://192.168.1.30/grafana`
+
+### ingress-stack.yaml
+
+#### Services
+
+- [Docker Flow Proxy](https://hub.docker.com/r/dockerflow/docker-flow-proxy/)
+    - Uses custom built arm32v6 image in `../dockerfiles/docker-flow-proxy` directory
+    - Based on HAProxy and acts as an ingress gateway and will terminate TLS for services in the stack
+    - Allows dynamic registration of services based on Docker Swarm service labels
+- [Docker Flow Swarm Listener](https://hub.docker.com/r/dockerflow/docker-flow-swarm-listener)
+    - Must be on Manager (Pi3) since it requires the docker.sock
+    - Dynamically registers services on the ingress proxy
+    
+### mqtt-stack.yaml
+
+#### Services
+
+- [Mosquitto](https://hub.docker.com/_/eclipse-mosquitto)
+    - provides MQTT
+    - `mqtt` Access at `https://192.168.1.30:1883`
+    - `mqtts` Access at `https://192.168.1.30:8883`
+    
+### portainer-stack.yaml
+
+#### Services
+
+- [Portainer](https://hub.docker.com/r/portainer/portainer/)
+    - Must be on Manager (Pi3) since no image exists for arm32v6
+    - Provides nice management GUI for Docker Swarm
+    - `https` Access at `https://192.168.1.30/portainer`
+    
+    
+### telegraf-stack.yaml
+
+#### Services
+
+- [Telegraf](https://hub.docker.com/_/telegraf)
+    - Must be on Manager (Pi3) since no image exists for arm32v6
+    - Configured to listen on MQTT and write data to influxDB
 

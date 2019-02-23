@@ -1,5 +1,5 @@
 #!/bin/bash
-SECRET_DIR=secrets
+SECRET_DIR=../secrets
 
 if [[ -d "${SECRET_DIR}" ]]; then
     echo "secrets directory already exists, nothing to do."
