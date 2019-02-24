@@ -3,7 +3,7 @@ services:
   telegraf:
     image: telegraf:latest
     configs:
-      - source: config.v1
+      - source: config.v2
         target: /etc/telegraf/telegraf.conf
     networks:
       - database
@@ -11,7 +11,7 @@ services:
       MQTT_USERNAME: ${MQTT_USERNAME:?err}
       MQTT_PASSWORD: ${MQTT_PASSWORD:?err}
       INFLUXDB_TELEGRAF_USER: ${INFLUXDB_TELEGRAF_USER:?err}
-      INFLUXDB_TELEGRAF_PASSWORD: ${$INFLUXDB_TELEGRAF_PASSWORD:?err}
+      INFLUXDB_TELEGRAF_PASSWORD: ${INFLUXDB_TELEGRAF_PASSWORD:?err}
     deploy:
       replicas: 1
       update_config:
@@ -26,7 +26,7 @@ services:
         constraints:
           - node.role == manager
 configs:
-  config.v1:
+  config.v2:
     file: ./configs/telegraf.conf
 networks:
   database:
