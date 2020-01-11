@@ -3,7 +3,7 @@ TARGETDIR := build
 USERNAME := mchestr
 CONTROLLER_STATIC_IP := 192.168.1.30
 LAN_ROUTER := 192.168.1.1
-HYPRIOT_VERSION := v1.10.0-rc2
+HYPRIOT_VERSION := v1.11.5
 HYPRIOT_FILE := hypriotos-rpi-$(HYPRIOT_VERSION).img.zip
 HYPRIOT_URL := https://github.com/hypriot/image-builder-rpi/releases/download/$(HYPRIOT_VERSION)/$(HYPRIOT_FILE)
 COMPILE_NODE = m4 -D USERNAME=$(USERNAME) -D STATIC_IP_ADDR=$(STATIC_IP_ADDR) -D LAN_ROUTER=$(LAN_ROUTER) -D NODE=$* $< > $@
@@ -40,7 +40,7 @@ $(TARGETDIR)/%/:
 	mkdir -p $(TARGETDIR)/$*
 
 flash: guard-t $(t) $(HYPRIOT_FILE)
-	flash -C source/-u build/%(t)/user-data $(HYPRIOT_FILE)
+	flash -C source/$(t)/config.txt -u build/$(t)/user-data $(HYPRIOT_FILE)
 
 $(HYPRIOT_FILE):
 	curl -L $(HYPRIOT_URL) -o $(HYPRIOT_FILE)

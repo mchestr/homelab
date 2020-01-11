@@ -3,16 +3,16 @@ services:
   influxdb:
     image: influxdb
     volumes:
-      - influxdb_data:/var/lib/influxdb
+    - influxdb_data:/var/lib/influxdb
     environment:
-      - INFLUXDB_HTTP_AUTH_ENABLED=true
+    - INFLUXDB_HTTP_AUTH_ENABLED=true
     networks:
-      - database
+    - database
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+        - node.role == manager
       update_config:
         parallelism: 2
         delay: 10s
@@ -23,6 +23,8 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
   postgresql:
     image: arm32v6/postgres:11.2-alpine
     environment:
@@ -30,24 +32,24 @@ services:
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     networks:
-      - database
+    - database
     volumes:
-      - postgresql_data:/var/lib/postgresql
+    - postgresql_data:/var/lib/postgresql
     configs:
-      - source: postgres_init.v1
-        target: /docker-entrypoint-initdb.d/postgres_init.sh
-        mode: 0777
+    - source: postgres_init.v1
+      target: /docker-entrypoint-initdb.d/postgres_init.sh
+      mode: 0777
     secrets:
-      - source: postgresql_db.v1
-        target: db
-      - source: postgresql_user.v1
-        target: db_user
-      - source: postgresql_password.v1
-        target: db_password
-      - source: postgresql_grafana_user.v1
-        target: postgresql_grafana_user
-      - source: postgresql_grafana_password.v1
-        target: postgresql_grafana_password
+    - source: postgresql_db.v1
+      target: db
+    - source: postgresql_user.v1
+      target: db_user
+    - source: postgresql_password.v1
+      target: db_password
+    - source: postgresql_grafana_user.v1
+      target: postgresql_grafana_user
+    - source: postgresql_grafana_password.v1
+      target: postgresql_grafana_password
     deploy:
       replicas: 1
       update_config:
@@ -60,6 +62,8 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
 configs:
   postgres_init.v1:
     file: ./configs/postgres_init.sh
@@ -69,13 +73,13 @@ volumes:
     driver_opts:
       type: nfs
       o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":/nfs/influxdb"
+      device: ":${INFLUXDB_NFS_DIR:?not set}"
   postgresql_data:
     driver: local
     driver_opts:
       type: nfs
       o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":/nfs/postgresql"
+      device: ":${POSTGRESQL_NFS_DIR:?not set}"
 secrets:
   postgresql_db.v1:
     file: ./secrets/postgresql_db

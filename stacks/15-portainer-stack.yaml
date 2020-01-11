@@ -4,20 +4,20 @@ services:
     image: portainer/portainer
     command: -H tcp://tasks.agent:9001 --tlsskipverify
     volumes:
-      - portainer_data:/data
+    - portainer_data:/data
     networks:
-      - default
-      - proxy
+    - default
+    - proxy
     deploy:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+        - node.role == manager
       labels:
-        - com.df.notify=true
-        - com.df.servicePath=/portainer
-        - com.df.reqPathSearchReplace=/portainer,
-        - com.df.port=9000
+      - traefik.enabled=true
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+      - "traefik.http.routers.portainer.rule=Host(`portainer.${DOCKER_DOMAIN}`) || PathPrefixStrip: /portainer"
+      - traefik.http.routers.portainer.entrypoints=http
       update_config:
         parallelism: 2
         delay: 10s
@@ -28,12 +28,14 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
   agent:
     image: portainer/agent
     environment:
       AGENT_CLUSTER_ADDR: tasks.agent
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock
     deploy:
       mode: global
       update_config:
@@ -44,6 +46,8 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
 networks:
   proxy:
     external: true
@@ -53,4 +57,4 @@ volumes:
     driver_opts:
       type: nfs
       o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":/nfs/portainer"
+      device: ":${PORTAINER_NFS_DIR:?not set}"

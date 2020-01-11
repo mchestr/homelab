@@ -11,7 +11,7 @@ echo "Generate Docker Secrets..."
 SECRETS=("grafana_admin_user" "grafana_admin_password" "postgresql_db" "postgresql_user" "postgresql_password" "postgresql_grafana_user" "postgresql_grafana_password" "smtp_host" "smtp_email" "smtp_password");
 for secret in "${SECRETS[@]}"; do
     echo "$secret=";
-    read value;
+    read -r value;
     echo "$value" >> "${SECRET_DIR}/${secret}";
 done;
 
@@ -19,9 +19,15 @@ echo "Generate Environment Secrets..."
 ENV_SECRETS=("INFLUXDB_ADMIN_USER" "INFLUXDB_ADMIN_PASSWORD" "INFLUXDB_TELEGRAF_USER" "INFLUXDB_TELEGRAF_PASSWORD" "MQTT_USERNAME" "MQTT_PASSWORD" "MQTT_BRIDGE_HOST" "MQTT_BRIDGE_USER" "MQTT_BRIDGE_PASSWORD" "CERT_COUNTRY" "CERT_STATE" "CERT_LOCATION" "CERT_ORGANIZATION" "CERT_ORGANIZATIONAL_UNIT" "CERT_COMMON_NAME")
 for secret in "${ENV_SECRETS[@]}"; do
     echo "$secret=";
-    read value;
+    read -r value;
     declare "$secret"="$value"
 done;
+
+echo "TRAEFIK_DASHBOARD_USER=";
+read -r TRAEFIK_DASHBOARD_USER;
+echo "TRAEFIK_DASHBOARD_PASSWORD=";
+read -r TRAEFIK_DASHBOARD_PASSWORD;
+TRAEFIK_DASHBOARD_CREDS="$(htpasswd -nb "${TRAEFIK_DASHBOARD_USER}" "${TRAEFIK_DASHBOARD_PASSWORD}")"
 
 cat << EOF > ${SECRET_DIR}/.secrets
 #!/bin/bash
@@ -37,12 +43,16 @@ export MQTT_BRIDGE_HOST=$MQTT_BRIDGE_HOST
 export MQTT_BRIDGE_USER=$MQTT_BRIDGE_USER
 export MQTT_BRIDGE_PASSWORD=$MQTT_BRIDGE_PASSWORD
 
-export CERT_COUNTRY=$CERT_COUNTRY
-export CERT_STATE=$CERT_STATE
-export CERT_LOCATION=$CERT_LOCATION
-export CERT_ORGANIZATION=$CERT_ORGANIZATION
-export CERT_ORGANIZATIONAL_UNIT=$CERT_ORGANIZATIONAL_UNIT
-export CERT_COMMON_NAME=$CERT_COMMON_NAME
+export TRAEFIK_DASHBOARD_CREDS='$TRAEFIK_DASHBOARD_CREDS'
+
+export DOCKER_DOMAIN=$CERT_COMMON_NAME
+export LOGGING_DRIVER=journald
+export NFS_DIR=/nfs
+
+export HOMEASSISTANT_NFS_DIR="${NFS_DIR}/homeassistant"
+export PORTAINTER_NFS_DIR="${NFS_DIR}/portainer"
+export INFLUXDB_NFS_DIR="${NFS_DIR}/influxdb"
+export POSTGRESQL_NFS_DIR="${NFS_DIR}/postgresql"
 EOF
 
 echo "Generate Mosquitto Config..."
@@ -82,22 +92,25 @@ touch "${SECRET_DIR}/passwd"
 echo "Generating Mosquitto Users..."
 while true; do
     echo "Enter MQTT User [n to exit]: "
-    read username;
+    read -r username;
     case ${username} in
         [nN]* ) break;;
     esac
     echo "Enter MQTT Password: "
-    read password;
+    read -r password;
     echo "Generating passwd contents..."
-    docker run -it --rm -v $(pwd)/${SECRET_DIR}:/data eclipse-mosquitto:latest mosquitto_passwd -b /data/passwd ${username} ${password}
+    docker run -it --rm -v "$(pwd)/${SECRET_DIR}:/data" eclipse-mosquitto:latest mosquitto_passwd -b /data/passwd "${username}" "${password}"
 done
 
 echo "Generating certificates..."
 CERT_DIR=${SECRET_DIR}/certs
 mkdir ${CERT_DIR}
+
 echo "Generate rootCA..."
 openssl genrsa -des3 -out ${CERT_DIR}/rootCA.key 4096
-openssl req -x509 -new -nodes -key ${CERT_DIR}/rootCA.key -sha256 -days 1024 -out ${CERT_DIR}/rootCA.crt
+openssl req -x509 -new -nodes -key ${CERT_DIR}/rootCA.key \
+  -sha256 -days 1024 -out ${CERT_DIR}/rootCA.crt \
+  -subj "/C=${CERT_COUNTRY}/ST=${CERT_STATE}/L=${CERT_LOCATION}/O=${CERT_ORGANIZATION}/OU=${CERT_ORGANIZATIONAL_UNIT}/CN=${CERT_COMMON_NAME}"
 
 echo "Generate MQTT Cert..."
 MQTT_CERT_DIR=${CERT_DIR}/mqtt
@@ -117,11 +130,10 @@ OU = ${CERT_ORGANIZATIONAL_UNIT}
 CN = ${CERT_COMMON_NAME}
 
 [v3_req]
-keyUsage = keyEncipherment, dataEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = mqtt.lan
+DNS.1 = mqtt.${CERT_COMMON_NAME}
 EOF
 
 openssl genrsa -out ${MQTT_CERT_DIR}/server.key 2048
@@ -149,17 +161,15 @@ OU = ${CERT_ORGANIZATIONAL_UNIT}
 CN = ${CERT_COMMON_NAME}
 
 [v3_req]
-keyUsage = keyEncipherment, dataEncipherment
 extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = ingress.lan
-DNS.2 = grafana.lan
-DNS.3 = portainer.lan
-DNS.4 = mqtt.lan
-DNS.5 = pi.hole
-DNS.6 = dns.lan
-DNS.7 = hass.lan
+DNS.1 = proxy.${CERT_COMMON_NAME}
+DNS.2 = grafana.${CERT_COMMON_NAME}
+DNS.3 = portainer.${CERT_COMMON_NAME}
+DNS.4 = mqtt.${CERT_COMMON_NAME}
+DNS.5 = dns.${CERT_COMMON_NAME}
+DNS.6 = hass.${CERT_COMMON_NAME}
 EOF
 
 openssl genrsa -out ${INGRESS_CERT_DIR}/server.key 2048
@@ -169,5 +179,3 @@ openssl x509 -req -in ${INGRESS_CERT_DIR}/server.csr -CA ${CERT_DIR}/rootCA.crt 
 openssl x509 -in ${INGRESS_CERT_DIR}/server.crt -text -noout
 rm ${INGRESS_CERT_DIR}/server.csr
 cat ${INGRESS_CERT_DIR}/server.crt ${INGRESS_CERT_DIR}/server.key >> ${INGRESS_CERT_DIR}/cert.pem
-
-rm ${CERT_DIR}/rootCA.srl

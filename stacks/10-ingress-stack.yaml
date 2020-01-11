@@ -1,0 +1,73 @@
+version: '3.4'
+services:
+  proxy:
+    image: traefik
+    command:
+    - "--api"
+    - "--entrypoints.http.address=:80"
+    - "--entrypoints.https.address=:443"
+    - "--entrypoints.mqtt.address=:1883"
+    - "--entrypoints.mqtts.address=:8883"
+    - "--providers.docker"
+    - "--providers.docker.swarmmode"
+    - "--providers.docker.watch"
+    - "--providers.file.directory=/configuration/"
+    - "--providers.file.watch=true"
+    ports:
+    - 80:80
+    - 443:443
+    - 1883:1883
+    - 8883:8883
+    networks:
+    - proxy
+    secrets:
+    - source: server_cert.v1
+      target: cert.pem
+    - source: server_key.v1
+      target: key.pem
+    configs:
+    - source: traefik_config.v2
+      target: /configuration/traefik.toml
+    volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      mode: global
+      labels:
+      - "traefik.http.routers.api.rule=Host(`proxy.${DOCKER_DOMAIN}`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDS}"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.services.dummy-svc.loadbalancer.server.port=9999"
+
+      # Global Redirect to HTTPS
+      - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+      - "traefik.http.routers.http-catchall.entrypoints=http"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+
+      # middleware redirect
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      placement:
+        constraints:
+        - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
+secrets:
+  server_cert.v1:
+    file: ./secrets/certs/ingress/server.crt
+  server_key.v1:
+    file: ./secrets/certs/ingress/server.key
+configs:
+  traefik_config.v2:
+    file: ./configs/traefik.toml
+networks:
+  proxy:
+    external: true

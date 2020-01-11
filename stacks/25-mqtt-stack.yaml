@@ -1,0 +1,50 @@
+version: '3.4'
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    networks:
+      proxy:
+      database:
+        aliases:
+        - mqtt
+    configs:
+    - source: config.v1
+      target: /mosquitto/config/mosquitto.conf
+    secrets:
+    - source: server_cert.v1
+      target: server.crt
+    - source: server_key.v1
+      target: server.key
+    - source: ca_cert.v1
+      target: ca-cert.pem
+    - source: passwd.v1
+      target: passwd
+    deploy:
+      replicas: 1
+      labels:
+      - traefik.enabled=true
+      - traefik.tcp.services.mqtt.loadbalancer.server.port=1883
+      - traefik.tcp.routers.mqtt.rule=HostSNI(`mqtt.$DOCKER_DOMAIN}`)
+      - traefik.tcp.routers.mqtt.entrypoints=mqtt
+      - traefik.tcp.services.mqtts.loadbalancer.server.port=8883
+      - traefik.tcp.routers.mqtts.rule=HostSNI(`mqtts.${DOCKER_DOMAIN`)
+      - traefik.tcp.routers.mqtts.entrypoints=mqtts
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
+secrets:
+  ca_cert.v1:
+    file: ./secrets/certs/rootCA.crt
+  server_cert.v1:
+    file: ./secrets/certs/mqtt/server.crt
+  server_key.v1:
+    file: ./secrets/certs/mqtt/server.key
+  passwd.v1:
+    file: ./secrets/passwd
+configs:
+  config.v1:
+    file: ./secrets/mosquitto.conf
+networks:
+  proxy:
+    external: true
+  database:
+    external: true

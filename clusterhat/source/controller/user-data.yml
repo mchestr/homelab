@@ -9,9 +9,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: users,docker,netdev,video
     lock_passwd: true
-    ssh-authorized-keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKqbTV/k0wS1JQiH7MIabgUccTTq5fpS2uh1YiNH7Wy1 mchester@Mikes-MacBook-Pro.local
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINjdaCyxs6i02cCx5gnc9KFlOtTtp+eGhX6gE9xzEEQY mchester@mchester
 
 package_update: true
 package_upgrade: false
@@ -47,7 +44,7 @@ runcmd:
   - docker swarm init --advertise-addr 172.19.181.254
   - mkdir /nfs
   - exportfs
-  
+
 write_files:
   - content: |
       [Unit]

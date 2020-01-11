@@ -7,3 +7,5 @@
 .idea/
 clusterhat/build/
 stacks/secrets/
+
+*.zip

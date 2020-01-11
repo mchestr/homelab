@@ -3,10 +3,10 @@ services:
   telegraf:
     image: telegraf:latest
     configs:
-      - source: config.v2
-        target: /etc/telegraf/telegraf.conf
+    - source: config.v2
+      target: /etc/telegraf/telegraf.conf
     networks:
-      - database
+    - database
     environment:
       MQTT_USERNAME: ${MQTT_USERNAME:?err}
       MQTT_PASSWORD: ${MQTT_PASSWORD:?err}
@@ -24,7 +24,9 @@ services:
         delay: 5s
       placement:
         constraints:
-          - node.role == manager
+        - node.role == manager
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
 configs:
   config.v2:
     file: ./configs/telegraf.conf
