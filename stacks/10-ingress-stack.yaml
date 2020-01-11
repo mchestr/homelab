@@ -11,7 +11,7 @@ services:
     - "--providers.docker"
     - "--providers.docker.swarmmode"
     - "--providers.docker.watch"
-    - "--certificatesResolvers.le.acme.email=mike@chester.io"
+    - "--certificatesResolvers.le.acme.email=${SMTP_EMAIL}"
     - "--certificatesResolvers.le.acme.storage=acme.json"
     # used during the challenge
     - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=http"
