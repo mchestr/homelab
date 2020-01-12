@@ -5,7 +5,7 @@ services:
     networks:
     - proxy
     configs:
-    - source: config.v1
+    - source: config.v2
       target: /mosquitto/config/mosquitto.conf
     secrets:
     - source: passwd.v1
@@ -25,7 +25,7 @@ secrets:
   passwd.v1:
     file: ./secrets/passwd
 configs:
-  config.v1:
+  config.v2:
     file: ./secrets/mosquitto.conf
 networks:
   proxy:
