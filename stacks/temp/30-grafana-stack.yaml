@@ -57,8 +57,8 @@ services:
       labels:
       - traefik.enabled=true
       - traefik.http.services.grafana.loadbalancer.server.port=3000
-      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOCKER_DOMAIN}`) || PathPrefixStrip: /grafana"
-      - traefik.http.routers.grafana.entrypoints=http
+      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOCKER_DOMAIN}`)"
+      - traefik.http.routers.grafana.entrypoints=https
     logging:
       driver: ${LOGGING_DRIVER:?not set}
 secrets:

@@ -10,9 +10,9 @@ if [[ ! -f "./secrets/.secrets" ]]; then
 fi;
 source ./secrets/.secrets
 
-STACKS=$(ls ./*stack.yaml)
-declare -a NFS_DIRS=("${PORTAINTER_NFS_DIR}" "${HOMEASSISTANT_NFS_DIR}")
-declare -a NFS_DIRS_NRS=("${INFLUXDB_NFS_DIR}" "${POSTGRESQL_NFS_DIR}")
+STACKS=${STACKS:-$(ls ./*stack.yaml)}
+#declare -a NFS_DIRS=("${PORTAINTER_NFS_DIR}" "${HOMEASSISTANT_NFS_DIR}")
+#declare -a NFS_DIRS_NRS=("${INFLUXDB_NFS_DIR}" "${POSTGRESQL_NFS_DIR}")
 declare -a DOCKER_OVERLAY_NETWORKS=("proxy" "database" "portainer_agent")
 
 

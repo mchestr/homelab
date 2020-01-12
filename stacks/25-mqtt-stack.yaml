@@ -1,0 +1,32 @@
+version: '3.4'
+services:
+  mqtt:
+    image: eclipse-mosquitto
+    networks:
+    - proxy
+    configs:
+    - source: config.v1
+      target: /mosquitto/config/mosquitto.conf
+    secrets:
+    - source: passwd.v1
+      target: passwd
+    deploy:
+      replicas: 1
+      labels:
+      - traefik.enable=true
+      - traefik.tcp.services.mqtts.loadbalancer.server.port=1883
+      - traefik.tcp.routers.mqtts.rule=HostSNI(`mqtts.${SUBDOMAIN}`)
+      - traefik.tcp.routers.mqtts.entrypoints=mqtts
+      - traefik.tcp.routers.mqtts.tls=true
+      - traefik.tcp.routers.mqtts.tls.certresolver=le
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
+secrets:
+  passwd.v1:
+    file: ./secrets/passwd
+configs:
+  config.v1:
+    file: ./secrets/mosquitto.conf
+networks:
+  proxy:
+    external: true

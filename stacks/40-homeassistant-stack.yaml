@@ -1,0 +1,49 @@
+version: '3.4'
+services:
+  home-assistant:
+    image: homeassistant/home-assistant
+    networks:
+    - proxy
+    configs:
+    - source: configuration.yaml.v1
+      target: /config/configuration.yaml
+    secrets:
+    - source: secrets.yaml.v3
+      target: /config/secrets.yaml
+    volumes:
+    - homeassistant_data:/config
+    deploy:
+      replicas: 1
+      labels:
+      - traefik.enable=true
+      - traefik.http.services.hass.loadbalancer.server.port=8123
+      - "traefik.http.routers.hass.rule=Host(`hass.${SUBDOMAIN}`)"
+      - traefik.http.routers.hass.entrypoints=https
+      - "traefik.http.routers.hass.tls=true"
+      - "traefik.http.routers.hass.tls.certresolver=le"
+      placement:
+        constraints:
+        - node.role == manager
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
+networks:
+  proxy:
+    external: true
+configs:
+  configuration.yaml.v1:
+    file: ./configs/homeassistant/configuration.yaml
+secrets:
+  secrets.yaml.v3:
+    file: ./secrets/homeassistant/secrets.yaml
+volumes:
+  homeassistant_data:

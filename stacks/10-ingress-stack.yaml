@@ -6,7 +6,6 @@ services:
     - "--api"
     - "--entrypoints.http.address=:80"
     - "--entrypoints.https.address=:443"
-    - "--entrypoints.mqtt.address=:1883"
     - "--entrypoints.mqtts.address=:8883"
     - "--providers.docker"
     - "--providers.docker.exposedByDefault=false"
@@ -24,7 +23,6 @@ services:
     ports:
     - 80:80
     - 443:443
-    - 1883:1883
     - 8883:8883
     networks:
     - proxy
