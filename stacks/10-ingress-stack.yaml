@@ -12,7 +12,7 @@ services:
     - "--providers.docker.swarmmode"
     - "--providers.docker.watch"
     - "--certificatesResolvers.le.acme.email=${SMTP_EMAIL}"
-    - "--certificatesResolvers.le.acme.storage=acme.json"
+    - "--certificatesResolvers.le.acme.storage=/etc/traefik/acme/acme.json"
     # used during the challenge
     - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=http"
     ports:
@@ -29,6 +29,7 @@ services:
       target: key.pem
     volumes:
     - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    - "traefik_certs:/etc/traefik/acme"
     deploy:
       mode: global
       labels:
@@ -68,3 +69,5 @@ secrets:
 networks:
   proxy:
     external: true
+volumes:
+  traefik_certs:
