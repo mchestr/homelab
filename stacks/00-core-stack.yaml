@@ -2,17 +2,24 @@ version: '3.4'
 services:
   prometheus:
     image: prom/prometheus:v2.15.2
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+    - proxy
     deploy:
       replicas: 1
       placement:
         constraints:
         - node.role == manager
       labels:
-      - traefik.enabled=true
-      - "traefik.http.routers.portainer.rule=Host(`prometheus.${SUBDOMAIN}`)"
-      - "traefik.http.routers.portainer.entrypoints=https"
-      - "traefik.http.routers.api.tls=true"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - traefik.enable=true
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.${SUBDOMAIN}`)"
+      - "traefik.http.routers.prometheus.entrypoints=https"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.routers.prometheus.tls.certresolver=le"
+      - "traefik.http.routers.prometheus.middlewares=auth-prometheus"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.http.middlewares.auth-prometheus.basicauth.users=${TRAEFIK_PROMETHEUS_CREDENTIALS}"
       update_config:
         parallelism: 2
         delay: 10s
@@ -23,15 +30,15 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      logging:
-        driver: ${LOGGING_DRIVER:?not set}
-  ui:
+    logging:
+      driver: ${LOGGING_DRIVER:?not set}
+  portainer:
     image: portainer/portainer
     command: -H tcp://tasks.agent:9001 --tlsskipverify
     volumes:
     - portainer_data:/data
     networks:
-    - default
+    - portainer_agent
     - proxy
     deploy:
       replicas: 1
@@ -39,10 +46,11 @@ services:
         constraints:
         - node.role == manager
       labels:
-      - traefik.enabled=true
+      - traefik.enable=true
       - "traefik.http.routers.portainer.rule=Host(`portainer.${SUBDOMAIN}`)"
       - "traefik.http.routers.portainer.entrypoints=https"
-      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.tls.certresolver=le"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
       update_config:
         parallelism: 2
@@ -58,12 +66,16 @@ services:
       driver: ${LOGGING_DRIVER:?not set}
   agent:
     image: portainer/agent
-    environment:
-      AGENT_CLUSTER_ADDR: tasks.agent
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
+    - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+    - portainer_agent
     deploy:
       mode: global
+      placement:
+        constraints:
+        - node.platform.os == linux
       update_config:
         delay: 10s
         failure_action: rollback
@@ -77,10 +89,8 @@ services:
 networks:
   proxy:
     external: true
+  portainer_agent:
+    external: true
 volumes:
+  prometheus_data:
   portainer_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":${PORTAINER_NFS_DIR:?not set}"

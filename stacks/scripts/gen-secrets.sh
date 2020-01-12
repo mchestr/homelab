@@ -36,16 +36,16 @@ for secret in "${ENV_SECRETS[@]}"; do
 done;
 
 echo "Generate Traefik BasicAuth Credentials for Services..."
-TRAEFIK_SERVICES=("PROXY" "PORTAINER" "PROMETHEUS")
+TRAEFIK_SERVICES=("PROXY" "PROMETHEUS")
 for service in "${TRAEFIK_SERVICES[@]}"; do
-  if [[ -z "TRAEFIK_${service}_CREDENTIALS" ]]; then
+  env_var="TRAEFIK_${service}_CREDENTIALS"
+  if [[ -z "${!env_var}" ]]; then
     echo "TRAEFIK_${service}_USERNAME=";
     read -r user;
     echo "TRAEFIK_${service}_PASSWORD=";
     read -r password;
     declare "TRAEFIK_${service}_CREDENTIALS"="$(htpasswd -nb ${user} ${password})";
   else
-    env_var="TRAEFIK_${service}_CREDENTIALS";
     echo "${env_var}=$(printf '%s\n' "${!env_var}")"
   fi;
 done;
@@ -67,7 +67,6 @@ export MQTT_BRIDGE_USER=$MQTT_BRIDGE_USER
 export MQTT_BRIDGE_PASSWORD=$MQTT_BRIDGE_PASSWORD
 
 export TRAEFIK_PROXY_CREDENTIALS='$TRAEFIK_PROXY_CREDENTIALS'
-export TRAEFIK_PORTAINER_CREDENTIALS='$TRAEFIK_PORTAINER_CREDENTIALS'
 export TRAEFIK_PROMETHEUS_CREDENTIALS='$TRAEFIK_PROMETHEUS_CREDENTIALS'
 
 export SMTP_EMAIL=$SMTP_EMAIL
