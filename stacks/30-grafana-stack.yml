@@ -11,11 +11,7 @@ services:
     - GF_SMTP_USER__FILE=/run/secrets/smtp_user
     - GF_SMTP_PASSWORD__FILE=/run/secrets/smtp_password
     - GF_SMTP_FROM_ADDRESS__FILE=/run/secrets/smtp_from_address
-    - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana
-    - GF_DATABASE_TYPE=postgres
-    - GF_DATABASE_HOST=postgresql
-    - GF_DATABASE_USER__FILE=/run/secrets/db_user
-    - GF_DATABASE_PASSWORD__FILE=/run/secrets/db_password
+    - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s
     - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/admin_user
     - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/admin_password
     - GF_INSTALL_PLUGINS=blackmirror1-singlestat-math-panel
@@ -32,10 +28,6 @@ services:
       target: smtp_password
     - source: grafana_smtp_from_address.v1
       target: smtp_from_address
-    - source: postgresql_user.v1
-      target: db_user
-    - source: postgresql_password.v1
-      target: db_password
     networks:
     - proxy
     - database
@@ -55,7 +47,7 @@ services:
         max_attempts: 3
         window: 120s
       labels:
-      - traefik.enabled=true
+      - traefik.enable=true
       - traefik.http.services.grafana.loadbalancer.server.port=3000
       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOCKER_DOMAIN}`)"
       - traefik.http.routers.grafana.entrypoints=https
@@ -74,10 +66,6 @@ secrets:
     file: ./secrets/smtp_password
   grafana_smtp_from_address.v1:
     file: ./secrets/smtp_email
-  postgresql_user.v1:
-    file: ./secrets/postgresql_user
-  postgresql_password.v1:
-    file: ./secrets/postgresql_password
 networks:
   proxy:
     external: true

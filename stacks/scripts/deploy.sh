@@ -2,23 +2,27 @@
 
 set -o xtrace
 
-sudo apt install nfs-kernel-server apache2-utils
-
 if [[ ! -f "./secrets/.secrets" ]]; then
   echo "./secrets/.secrets not found, run gen-secrets.sh first..."
   exit 1;
 fi;
 source ./secrets/.secrets
 
-STACKS=${STACKS:-$(ls ./*stack.yaml)}
+STACKS=${STACKS:-$(ls ./*stack.yml)}
 #declare -a NFS_DIRS=("${PORTAINTER_NFS_DIR}" "${HOMEASSISTANT_NFS_DIR}")
 #declare -a NFS_DIRS_NRS=("${INFLUXDB_NFS_DIR}" "${POSTGRESQL_NFS_DIR}")
 declare -a DOCKER_OVERLAY_NETWORKS=("proxy" "database" "portainer_agent")
 
+declare -a DATA_DIRS=("homeassistant" "openvpn" "portainer" "prometheus" "traefik")
+for dir in "${DATA_DIRS[@]}"; do
+  if [[ ! -d "${DATA_DIR}/${dir}" ]]; then
+    sudo mkdir "${DATA_DIR}/${dir}"
+  fi
+done
 
 poll_stack_status() {
   stack="${1}"
-  delay="${2:-15}"
+  delay="${DELAY:-15}"
   end="$(($(date +%s) + delay))"
 
   while [ "$(date +%s)" -lt $end ]; do

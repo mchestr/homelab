@@ -1,17 +1,19 @@
 version: '3.4'
 services:
-  home-assistant:
+  hass:
     image: homeassistant/home-assistant
     networks:
     - proxy
     configs:
     - source: configuration.yaml.v1
       target: /config/configuration.yaml
+    - source: automations.yaml.v2
+      target: /config/automations.yaml
     secrets:
-    - source: secrets.yaml.v3
+    - source: secrets.yaml.v1
       target: /config/secrets.yaml
     volumes:
-    - homeassistant_data:/config
+    - hass:/config
     deploy:
       replicas: 1
       labels:
@@ -42,8 +44,10 @@ networks:
 configs:
   configuration.yaml.v1:
     file: ./configs/homeassistant/configuration.yaml
+  automations.yaml.v2:
+    file: ./configs/homeassistant/automations.yaml
 secrets:
-  secrets.yaml.v3:
+  secrets.yaml.v1:
     file: ./secrets/homeassistant/secrets.yaml
 volumes:
-  homeassistant_data:
+  hass:

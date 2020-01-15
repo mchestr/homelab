@@ -1,6 +1,8 @@
 #!/bin/bash
 SECRET_DIR=../secrets
 
+sudo apt install apache2-utils
+
 if [[ -d "${SECRET_DIR}" ]]; then
   source "${SECRET_DIR}"/.secrets
 else
@@ -23,7 +25,8 @@ done;
 
 echo "Generate Environment Secrets..."
 ENV_SECRETS=("INFLUXDB_ADMIN_USER" "INFLUXDB_ADMIN_PASSWORD" "INFLUXDB_TELEGRAF_USER"
-             "INFLUXDB_TELEGRAF_PASSWORD" "MQTT_USERNAME" "MQTT_PASSWORD" "SUBDOMAIN")
+             "INFLUXDB_TELEGRAF_PASSWORD" "MQTT_USERNAME" "MQTT_PASSWORD" "SUBDOMAIN" "INFLUXDB_READ_USER"
+             "INFLUXDB_READ_USER_PASSWORD")
 for secret in "${ENV_SECRETS[@]}"; do
   if [[ -z "${!secret}" ]]; then
     echo "$secret=";
@@ -58,6 +61,8 @@ export INFLUXDB_ADMIN_USER=$INFLUXDB_ADMIN_USER
 export INFLUXDB_ADMIN_PASSWORD=$INFLUXDB_ADMIN_PASSWORD
 export INFLUXDB_TELEGRAF_USER=$INFLUXDB_TELEGRAF_USER
 export INFLUXDB_TELEGRAF_PASSWORD=$INFLUXDB_TELEGRAF_PASSWORD
+export INFLUXDB_READ_USER=$INFLUXDB_READ_USER
+export INFLUXDB_READ_USER_PASSWORD=$INFLUXDB_READ_USER_PASSWORD
 
 export MQTT_USERNAME=$MQTT_USERNAME
 export MQTT_PASSWORD=$MQTT_PASSWORD
@@ -114,7 +119,8 @@ if [[ ! -f "${SECRET_DIR}/passwd" ]]; then
 fi;
 
 echo "Generate Home Assistant Secrets..."
-ENV_SECRETS=("AUGUST_USERNAME" "AUGUST_PASSWORD" "GOOGLE_ASSISTANT_PROJECT_ID")
+ENV_SECRETS=("AUGUST_USERNAME" "AUGUST_PASSWORD" "GOOGLE_ASSISTANT_PROJECT_ID" "VACUUM_ROOMBA_USERNAME"
+             "VACUUM_ROOMBA_PASSWORD")
 for secret in "${ENV_SECRETS[@]}"; do
   if [[ -z "${!secret}" ]]; then
     echo "$secret=";
@@ -134,4 +140,7 @@ cat << EOF > ${SECRET_DIR}/homeassistant/secrets.yaml
 august_username: "${AUGUST_USERNAME}"
 august_password: "${AUGUST_PASSWORD}"
 google_assistant_project_id: "${GOOGLE_ASSISTANT_PROJECT_ID}"
+vacuum_roomba_username: "${VACUUM_ROOMBA_USERNAME}"
+vacuum_roomba_password: "${VACUUM_ROOMBA_PASSWORD}"
+base_url: "https://hass.${SUBDOMAIN}"
 EOF

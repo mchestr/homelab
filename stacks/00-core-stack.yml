@@ -3,7 +3,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.15.2
     volumes:
-      - prometheus_data:/prometheus
+      - prometheus:/prometheus
     networks:
     - proxy
     deploy:
@@ -36,7 +36,7 @@ services:
     image: portainer/portainer
     command: -H tcp://tasks.agent:9001 --tlsskipverify
     volumes:
-    - portainer_data:/data
+    - portainer:/data
     networks:
     - portainer_agent
     - proxy
@@ -92,5 +92,5 @@ networks:
   portainer_agent:
     external: true
 volumes:
-  prometheus_data:
-  portainer_data:
+  portainer:
+  prometheus:

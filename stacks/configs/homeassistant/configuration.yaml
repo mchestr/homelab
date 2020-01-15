@@ -1,0 +1,46 @@
+---
+default_config:
+
+http:
+  base_url: !secret base_url
+
+homeassistant:
+  customize: !include customize.yaml
+
+automation: !include automations.yaml
+
+tts:
+- platform: google_translate
+
+cast:
+  media_player:
+    - host: 192.168.1.4
+
+input_number:
+  servo_control:
+    name: Cat Servo Control
+    initial: 0
+    min: -180
+    max: 180
+    step: 1
+    mode: slider
+
+august:
+  login_method: phone
+  username: !secret august_username
+  password: !secret august_password
+
+google_assistant:
+  project_id: !secret google_assistant_project_id
+
+vacuum:
+- platform: roomba
+  host: 192.168.1.24
+  username: !secret vacuum_roomba_username
+  password: !secret vacuum_roomba_password
+  name: Zoomba
+
+tplink:
+  switch:
+  - host: 192.168.1.7
+  - host: 192.168.1.5

@@ -1,0 +1,14 @@
+version: '3'
+services:
+  openvpn:
+    image: mchestr/openvpn:latest
+    cap_add:
+    - NET_ADMIN
+    container_name: openvpn
+    ports:
+     - "1194:1194/udp"
+    volumes:
+     - /data/openvpn/conf:/etc/openvpn
+    restart: always
+    logging:
+      driver: none

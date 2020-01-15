@@ -1,12 +1,14 @@
 version: '3.4'
 services:
   proxy:
-    image: traefik
+    image: traefik:v2.1.2
     command:
     - "--api"
     - "--entrypoints.http.address=:80"
     - "--entrypoints.https.address=:443"
     - "--entrypoints.mqtts.address=:8883"
+    - "--entrypoints.psql.address=:5432"
+    - "--entrypoints.influx.address=:8086"
     - "--providers.docker"
     - "--providers.docker.exposedByDefault=false"
     - "--providers.docker.network=proxy"
@@ -24,11 +26,13 @@ services:
     - 80:80
     - 443:443
     - 8883:8883
+    - 5432:5432
+    - 8086:8086
     networks:
     - proxy
     volumes:
     - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    - "traefik_certs:/etc/traefik/acme"
+    - traefik:/etc/traefik/acme
     deploy:
       mode: global
       labels:
@@ -66,4 +70,4 @@ networks:
   proxy:
     external: true
 volumes:
-  traefik_certs:
+  traefik:

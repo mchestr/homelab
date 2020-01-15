@@ -6,6 +6,12 @@ services:
     - influxdb_data:/var/lib/influxdb
     environment:
     - INFLUXDB_HTTP_AUTH_ENABLED=true
+    - INFLUXDB_ADMIN_USER
+    - INFLUXDB_ADMIN_PASSWORD
+    - INFLUXDB_READ_USER
+    - INFLUXDB_READ_USER_PASSWORD
+    - INFLUXDB_WRITE_USER=${INFLUXDB_TELEGRAF_USER}
+    - INFLUXDB_WRITE_USER_PASSWORD=${INFLUXDB_TELEGRAF_PASSWORD}
     networks:
     - database
     deploy:
@@ -23,10 +29,17 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+      labels:
+      - traefik.enable=true
+      - traefik.http.services.influx.loadbalancer.server.port=8086
+      - traefik.http.routers.influx.entrypoints=influx
+      - "traefik.http.routers.influx.rule=Host(`influxdb.${SUBDOMAIN}`)"
+      - "traefik.http.routers.influx.tls=true"
+      - "traefik.http.routers.influx.tls.certresolver=le"
     logging:
       driver: ${LOGGING_DRIVER:?not set}
   postgresql:
-    image: arm32v6/postgres:11.2-alpine
+    image: postgres:11.2-alpine
     environment:
       POSTGRES_DB_FILE: /run/secrets/db
       POSTGRES_USER_FILE: /run/secrets/db_user
@@ -62,6 +75,11 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+      labels:
+      - traefik.enable=true
+      - traefik.tcp.services.psql.loadbalancer.server.port=5432
+      - traefik.tcp.routers.psql.entrypoints=psql
+      - traefik.tcp.routers.psql.rule=HostSNI(`psql.${SUBDOMAIN}`)
     logging:
       driver: ${LOGGING_DRIVER:?not set}
 configs:
@@ -69,17 +87,7 @@ configs:
     file: ./configs/postgres_init.sh
 volumes:
   influxdb_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":${INFLUXDB_NFS_DIR:?not set}"
   postgresql_data:
-    driver: local
-    driver_opts:
-      type: nfs
-      o: addr=172.19.181.254,v3,nolock,soft,rw
-      device: ":${POSTGRESQL_NFS_DIR:?not set}"
 secrets:
   postgresql_db.v1:
     file: ./secrets/postgresql_db
