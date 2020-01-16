@@ -1,7 +1,8 @@
 #!/bin/bash
 SECRET_DIR=../secrets
+DATA_DIR=../data
 
-sudo apt install apache2-utils
+sudo apt install apache2-utils nfs-kernel-server
 
 if [[ -d "${SECRET_DIR}" ]]; then
   source "${SECRET_DIR}"/.secrets
@@ -136,7 +137,7 @@ if [[ ! -d "${SECRET_DIR}/homeassistant" ]]; then
   mkdir "${SECRET_DIR}"/homeassistant
 fi;
 
-cat << EOF > ${SECRET_DIR}/homeassistant/secrets.yaml
+cat << EOF > ${DATA_DIR}/homeassistant/secrets.yaml
 ---
 august_username: "${AUGUST_USERNAME}"
 august_password: "${AUGUST_PASSWORD}"

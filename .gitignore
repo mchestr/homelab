@@ -8,4 +8,14 @@
 clusterhat/build/
 stacks/secrets/
 
+# Home Assistant Things
+secrets.yaml
+home-assistant_v2.db
+home-assistant.log
+.august.conf
+.storage/
+tts/
+.HA_VERSION
+
+
 *.zip

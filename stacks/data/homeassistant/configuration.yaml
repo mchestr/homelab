@@ -4,6 +4,8 @@ default_config:
 http:
   base_url: !secret base_url
 
+frontend: !include frontend.yaml
+
 homeassistant:
   customize: !include customize.yaml
 

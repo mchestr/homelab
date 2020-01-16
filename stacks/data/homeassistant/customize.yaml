@@ -1,0 +1,8 @@
+device_tracker.homelab_mchester:
+  hidden: true
+binary_sensor.updater:
+  hidden: true
+binary_sensor.front_door_open:
+  homebridge_hidden: true
+binary_sensor.front_door_sensor:
+  homebridge_hidden: true
