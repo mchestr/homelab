@@ -12,7 +12,7 @@ fi;
 echo "Generate Docker Secrets..."
 SECRETS=("grafana_admin_user" "grafana_admin_password" "postgresql_db" "postgresql_user"
          "postgresql_password" "postgresql_grafana_user" "postgresql_grafana_password" "smtp_host"
-         "smtp_email" "smtp_password");
+         "smtp_email" "smtp_password" "gandi_api_key");
 for secret in "${SECRETS[@]}"; do
   if [[ ! -f "${SECRET_DIR}/${secret}" ]]; then
     echo "$secret=";
@@ -67,6 +67,7 @@ export INFLUXDB_READ_USER_PASSWORD=$INFLUXDB_READ_USER_PASSWORD
 export MQTT_USERNAME=$MQTT_USERNAME
 export MQTT_PASSWORD=$MQTT_PASSWORD
 
+export TRAEFIK_GRAFANA_CREDENTIALS='$TRAEFIK_GRAFANA_CREDENTIALS'
 export TRAEFIK_PROXY_CREDENTIALS='$TRAEFIK_PROXY_CREDENTIALS'
 export TRAEFIK_PROMETHEUS_CREDENTIALS='$TRAEFIK_PROMETHEUS_CREDENTIALS'
 

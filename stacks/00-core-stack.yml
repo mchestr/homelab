@@ -6,6 +6,12 @@ services:
       - prometheus:/prometheus
     networks:
     - proxy
+    secrets:
+    - source: traefik_proxy_password.v1
+      target: traefik_proxy_password
+    configs:
+    - source: prometheus.yml.v2
+      target: /etc/prometheus/prometheus.yml
     deploy:
       replicas: 1
       placement:
@@ -13,13 +19,12 @@ services:
         - node.role == manager
       labels:
       - traefik.enable=true
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.${SUBDOMAIN}`)"
-      - "traefik.http.routers.prometheus.entrypoints=https"
-      - "traefik.http.routers.prometheus.tls=true"
-      - "traefik.http.routers.prometheus.tls.certresolver=le"
-      - "traefik.http.routers.prometheus.middlewares=auth-prometheus"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-      - "traefik.http.middlewares.auth-prometheus.basicauth.users=${TRAEFIK_PROMETHEUS_CREDENTIALS}"
+      - traefik.http.routers.prometheus.rule=Host(`prometheus.${SUBDOMAIN}`)
+      - traefik.http.routers.prometheus.entrypoints=https
+      - traefik.http.routers.prometheus.tls=true
+      - traefik.http.routers.prometheus.middlewares=auth-prometheus
+      - traefik.http.services.prometheus.loadbalancer.server.port=9090
+      - traefik.http.middlewares.auth-prometheus.basicauth.users=${TRAEFIK_PROMETHEUS_CREDENTIALS}
       update_config:
         parallelism: 2
         delay: 10s
@@ -47,11 +52,10 @@ services:
         - node.role == manager
       labels:
       - traefik.enable=true
-      - "traefik.http.routers.portainer.rule=Host(`portainer.${SUBDOMAIN}`)"
-      - "traefik.http.routers.portainer.entrypoints=https"
-      - "traefik.http.routers.portainer.tls=true"
-      - "traefik.http.routers.portainer.tls.certresolver=le"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+      - traefik.http.routers.portainer.rule=Host(`portainer.${SUBDOMAIN}`)
+      - traefik.http.routers.portainer.entrypoints=https
+      - traefik.http.routers.portainer.tls=true
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
       update_config:
         parallelism: 2
         delay: 10s
@@ -86,6 +90,12 @@ services:
         window: 120s
     logging:
       driver: ${LOGGING_DRIVER:?not set}
+configs:
+  prometheus.yml.v2:
+    file: ./configs/prometheus.yml
+secrets:
+  traefik_proxy_password.v1:
+    file: ./secrets/traefik_proxy_password
 networks:
   proxy:
     external: true

@@ -13,6 +13,7 @@ services:
     - INFLUXDB_WRITE_USER=${INFLUXDB_TELEGRAF_USER}
     - INFLUXDB_WRITE_USER_PASSWORD=${INFLUXDB_TELEGRAF_PASSWORD}
     networks:
+    - proxy
     - database
     deploy:
       replicas: 1
@@ -32,10 +33,9 @@ services:
       labels:
       - traefik.enable=true
       - traefik.http.services.influx.loadbalancer.server.port=8086
-      - traefik.http.routers.influx.entrypoints=influx
-      - "traefik.http.routers.influx.rule=Host(`influxdb.${SUBDOMAIN}`)"
-      - "traefik.http.routers.influx.tls=true"
-      - "traefik.http.routers.influx.tls.certresolver=le"
+      - traefik.http.routers.influx.entrypoints=https
+      - traefik.http.routers.influx.rule=Host(`influxdb.${SUBDOMAIN}`)
+      - traefik.http.routers.influx.tls=true
     logging:
       driver: ${LOGGING_DRIVER:?not set}
   postgresql:
@@ -101,4 +101,6 @@ secrets:
     file: ./secrets/postgresql_grafana_password
 networks:
   database:
+    external: true
+  proxy:
     external: true

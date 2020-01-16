@@ -131,3 +131,14 @@
     data_template:
       title: "{{ trigger.to_state.attributes.friendly_name }} has been watered"
       message: "Currently: {{ trigger.to_state.state }}%"
+
+- id: zoomba_bin_full
+  alias: Zoomba bin is full
+  trigger:
+    platform: template
+    value_template: "{%if is_state_attr('vacuum.zoomba', 'bin_full', true) %}true{%endif%}"
+  action:
+  - service: notify.notify
+    data_template:
+      title: "Zoomba bin is full!"
+      message: "Bin is full!"

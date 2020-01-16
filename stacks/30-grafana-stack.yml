@@ -14,7 +14,9 @@ services:
     - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s
     - GF_SECURITY_ADMIN_USER__FILE=/run/secrets/admin_user
     - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/admin_password
-    - GF_INSTALL_PLUGINS=blackmirror1-singlestat-math-panel
+    - GF_INSTALL_PLUGINS=blackmirror1-singlestat-math-panel,grafana-piechart-panel
+    volumes:
+    - grafana:/var/lib/grafana
     secrets:
     - source: grafana_admin_user.v1
       target: admin_user
@@ -49,8 +51,9 @@ services:
       labels:
       - traefik.enable=true
       - traefik.http.services.grafana.loadbalancer.server.port=3000
-      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOCKER_DOMAIN}`)"
+      - traefik.http.routers.grafana.rule=Host(`grafana.${SUBDOMAIN}`)
       - traefik.http.routers.grafana.entrypoints=https
+      - traefik.http.routers.grafana.tls=true
     logging:
       driver: ${LOGGING_DRIVER:?not set}
 secrets:
@@ -66,6 +69,8 @@ secrets:
     file: ./secrets/smtp_password
   grafana_smtp_from_address.v1:
     file: ./secrets/smtp_email
+volumes:
+  grafana:
 networks:
   proxy:
     external: true
