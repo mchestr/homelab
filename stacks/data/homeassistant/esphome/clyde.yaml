@@ -1,0 +1,49 @@
+esphome:
+  name: clyde
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.1.27
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Clyde Fallback Hotspot"
+    password: !secret wifi_password
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+sensor:
+- platform: adc
+  pin: A0
+  name: "clyde_soil_moisture"
+  icon: "mdi:water-percent"
+  update_interval: 5s
+  unit_of_measurement: '%'
+  filters:
+  # 0.26v = in water
+  # 0.68v = dry
+  - lambda: |-
+      static float dry_v = 0.68;
+      static float wet_v = 0.26;
+      static float normalized = ((dry_v - x) * 100.0) / (dry_v - wet_v);
+      if (normalized >= 100 || normalized <= 0) {
+        return 1.0;
+      }
+      return normalized;
+  - sliding_window_moving_average:
+      window_size: 15
+      send_every: 12

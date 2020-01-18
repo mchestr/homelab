@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.5'
 services:
   hass:
     image: homeassistant/home-assistant:stable
@@ -6,6 +6,11 @@ services:
     - proxy
     volumes:
     - ./data/homeassistant:/config
+    healthcheck:
+      test: curl -f http://localhost:8123 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 6
     deploy:
       replicas: 1
       labels:

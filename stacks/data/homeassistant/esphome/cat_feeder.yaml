@@ -1,0 +1,39 @@
+esphome:
+  name: cat_feeder
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "Cat Feeder Fallback Hotspot"
+    password: !secret wifi_password
+
+captive_portal:
+
+logger:
+
+api:
+  services:
+  - service: control_servo
+    variables:
+      level: float
+    then:
+    - servo.write:
+        id: cat_servo
+        level: !lambda 'return level;'
+
+ota:
+
+servo:
+- id: cat_servo
+  output: pwm_output
+  idle_level: 0.0%
+
+output:
+- platform: esp8266_pwm
+  id: pwm_output
+  pin: D5
+  frequency: 50 Hz

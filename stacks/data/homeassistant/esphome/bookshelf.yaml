@@ -1,0 +1,92 @@
+esphome:
+  name: bookshelf
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.1.35
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Bookshelf Fallback Hotspot"
+    password: !secret wifi_password
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+sensor:
+- platform: adc
+  pin: 34
+  name: "magda_soil_moisture"
+  icon: "mdi:water-percent"
+  update_interval: 5s
+  unit_of_measurement: '%'
+  attenuation: 11db
+  filters:
+  # 1.18v = in water
+  # 3.35v = dry
+  - lambda: |-
+      static float dry_v = 3.30;
+      static float wet_v = 1.30;
+      static float normalized = (dry_v - x) * 100.0 / (dry_v - wet_v);
+      if (normalized >= 100 || normalized <= 0) {
+        return 1;
+      }
+      return normalized;
+  - sliding_window_moving_average:
+      window_size: 15
+      send_every: 12
+- platform: adc
+  pin: 39
+  name: "parker_soil_moisture"
+  icon: "mdi:water-percent"
+  update_interval: 5s
+  unit_of_measurement: '%'
+  attenuation: 11db
+  filters:
+  # 1.10v = in water
+  # 3.38v = dry
+  - lambda: |-
+      static float dry_v = 3.38;
+      static float wet_v = 1.10;
+      static float normalized = (dry_v - x) * 100.0 / (dry_v - wet_v);
+      if (normalized >= 100 || normalized <= 0) {
+        return 1;
+      }
+      return normalized;
+  - sliding_window_moving_average:
+      window_size: 15
+      send_every: 12
+- platform: adc
+  pin: 36
+  name: "aloe_soil_moisture"
+  icon: "mdi:water-percent"
+  update_interval: 5s
+  unit_of_measurement: '%'
+  attenuation: 11db
+  filters:
+  # 1.30v = in water
+  # 3.32v = dry
+  - lambda: |-
+      static float dry_v = 3.32;
+      static float wet_v = 1.30;
+      static float normalized = (dry_v - x) * 100.0 / (dry_v - wet_v);
+      if (normalized >= 100 || normalized <= 0) {
+        return 1;
+      }
+      return normalized;
+  - sliding_window_moving_average:
+      window_size: 15
+      send_every: 12

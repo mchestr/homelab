@@ -17,5 +17,17 @@ home-assistant.log
 tts/
 .HA_VERSION
 
+# Gitignore settings for ESPHome
+# This is an example and may include too much for your use-case.
+# You can modify this file to suit your needs.
+.esphome/
+**/.pioenvs/
+**/.piolibdeps/
+**/lib/
+**/src/
+**/platformio.ini
+clyde/
+cat_feeder/
+bookshelf/
 
 *.zip

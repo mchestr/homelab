@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.5'
 services:
   influxdb:
     image: influxdb
@@ -12,6 +12,11 @@ services:
     - INFLUXDB_READ_USER_PASSWORD
     - INFLUXDB_WRITE_USER=${INFLUXDB_TELEGRAF_USER}
     - INFLUXDB_WRITE_USER_PASSWORD=${INFLUXDB_TELEGRAF_PASSWORD}
+    healthcheck:
+      test: curl -f http://localhost:8086/ping || exit 1
+      interval: 30s
+      timeout: 1s
+      retries: 24
     networks:
     - proxy
     - database

@@ -11,6 +11,30 @@ homeassistant:
 
 automation: !include automations.yaml
 
+sensor:
+- platform: template
+  sensors:
+    computer_amps:
+      friendly_name_template: "{{ states.switch.miner.name }} Current"
+      value_template: '{{ state_attr("switch.miner", "current_a") | float }}'
+      unit_of_measurement: 'A'
+    computer_watts:
+      friendly_name_template: "{{ states.switch.miner.name }} Current Consumption"
+      value_template: '{{ state_attr("switch.miner", "current_power_w") | float }}'
+      unit_of_measurement: 'W'
+    computer_total_kwh:
+      friendly_name_template: "{{ states.switch.miner.name }} Total Consumption"
+      value_template: '{{ state_attr("switch.miner", "total_energy_kwh") | float }}'
+      unit_of_measurement: 'kWh'
+    computer_volts:
+      friendly_name_template: "{{ states.switch.miner.name }} Voltage"
+      value_template: '{{ state_attr("switch.miner", "voltage") | float }}'
+      unit_of_measurement: 'V'
+    computer_today_kwh:
+      friendly_name_template: "{{ states.switch.miner.name }} Today's Consumption"
+      value_template: '{{ state_attr("switch.miner", "today_energy_kwh") | float }}'
+      unit_of_measurement: 'kWh'
+
 tts:
 - platform: google_translate
 

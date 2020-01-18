@@ -10,7 +10,7 @@ services:
     - source: traefik_proxy_password.v1
       target: traefik_proxy_password
     configs:
-    - source: prometheus.yml.v2
+    - source: prometheus.yml.v3
       target: /etc/prometheus/prometheus.yml
     deploy:
       replicas: 1
@@ -91,7 +91,7 @@ services:
     logging:
       driver: ${LOGGING_DRIVER:?not set}
 configs:
-  prometheus.yml.v2:
+  prometheus.yml.v3:
     file: ./configs/prometheus.yml
 secrets:
   traefik_proxy_password.v1:
