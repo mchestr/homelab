@@ -11,6 +11,24 @@ homeassistant:
 
 automation: !include automations.yaml
 
+group:
+  all_persons:
+    name: All Persons
+    entities:
+    - person.mike
+    - person.jena
+
+light:
+- platform: group
+  name: all
+  entities:
+  - light.kitchen
+  - light.den
+  - light.bedroom
+  - light.living_room
+  - light.entryway
+  - light.bathroom
+
 sensor:
 - platform: template
   sensors:

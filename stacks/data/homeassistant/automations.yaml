@@ -1,15 +1,3 @@
-# Home Assistant configuration
-- id: cat_feeder_control
-  alias: Write Servo Value to ESP
-  trigger:
-    platform: state
-    entity_id: input_number.servo_control
-  action:
-    # Replace livingroom with the name you gave the ESP
-    - service: esphome.cat_feeder_control_servo
-      data_template:
-        level: '{{ trigger.to_state.state | int }}'
-
 - id: watering_alert_tts
   alias: Plants Need Water Alert TTS
   trigger:
@@ -54,50 +42,6 @@
     data_template:
       message: "Hey Fam, {{ trigger.to_state.attributes.friendly_name }} needs some water!"
 
-- id: watered_alert_tts
-  alias: Plants Been Watered Alert TTS
-  trigger:
-    platform: numeric_state
-    entity_id:
-    - sensor.aloe_soil_moisture
-    - sensor.clyde_soil_moisture
-    - sensor.magda_soil_moisture
-    - sensor.parker_soil_moisture
-    above: 70
-    for: "00:03:00"
-  condition:
-    condition: or
-    conditions:
-    - condition: time
-      after: "08:00:00"
-      before: "22:00:00"
-      weekday:
-      - sat
-      - sun
-    - condition: time
-      after: "07:00:00"
-      before: "09:00:00"
-      weekday:
-      - mon
-      - tue
-      - wed
-      - thu
-      - fri
-    - condition: time
-      after: "17:00:00"
-      before: "22:00:00"
-      weekday:
-      - mon
-      - tue
-      - wed
-      - thu
-      - fri
-  action:
-  - service: tts.google_translate_say
-    entity_id: media_player.family_room_speaker
-    data_template:
-      message: "{{ trigger.to_state.attributes.friendly_name }} feels so moist now, thanks!"
-
 - id: watering_alert_notify
   alias: Plants Need Water Alert Notify
   trigger:
@@ -115,23 +59,6 @@
       title: "{{ trigger.to_state.attributes.friendly_name }} Needs water!"
       message: "Currently: {{ trigger.to_state.state }}%"
 
-- id: watered_alert_notify
-  alias: Plants Been Watered Alert Notify
-  trigger:
-    platform: numeric_state
-    entity_id:
-    - sensor.aloe_soil_moisture
-    - sensor.clyde_soil_moisture
-    - sensor.magda_soil_moisture
-    - sensor.parker_soil_moisture
-    above: 70
-    for: "00:03:00"
-  action:
-  - service: notify.notify
-    data_template:
-      title: "{{ trigger.to_state.attributes.friendly_name }} has been watered"
-      message: "Currently: {{ trigger.to_state.state }}%"
-
 - id: zoomba_bin_full
   alias: Zoomba bin is full
   trigger:
@@ -142,3 +69,103 @@
     data_template:
       title: "Zoomba bin is full!"
       message: "Bin is full!"
+
+- id: cat_lights_away_on
+  alias: Turn on lights for cats when away from home
+  trigger:
+    platform: sun
+    event: sunset
+    offset: "-00:30:00"
+  condition:
+  - condition: state
+    entity_id: group.all_persons
+    state: away
+  action:
+  - service: light.turn_on
+    data:
+      entity_id: light.cat_lamp
+      brightness_pct: 40
+
+- id: cat_lights_away_off
+  alias: Turn off lights for cats when away from home
+  trigger:
+    platform: sun
+    event: sunrise
+    offset: '+00:00:00'
+  condition:
+  - condition: state
+    entity_id: group.all_persons
+    state: away
+  action:
+  - service: light.turn_off
+    data:
+      entity_id: light.cat_lamp
+
+- id: wakeup_routine
+  alias: Fade hue go on slowly
+  trigger:
+    platform: time
+    at: "06:30:00"
+  condition:
+    condition: and
+    conditions:
+    - condition: state
+      entity_id: person.mike
+      state: home
+    - condition: time
+      weekday:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+  action:
+  - service: light.turn_on
+    data:
+      entity_id: light.hue_go_1
+      transition: 300
+      brightness: 77
+      hs_color:
+      - 38.667
+      - 52.941
+      rgb_color:
+      - 255
+      - 207
+      - 120
+      xy_color:
+      - 0.457
+      - 0.41
+  - service: light.turn_on
+    data:
+      entity_id: light.living_room
+      brightness: 255
+  - delay: 00:10:00
+  - service: light.turn_on
+    data:
+      entity_id: light.living_room
+      brightness: 255
+
+- id: lights_off_away
+  alias: Turn lights off when away
+  trigger:
+    platform: state
+    entity_id: group.all_persons
+    from: home
+    to: away
+    for: "00:10:00"
+  action:
+  - service: light.turn_off
+    data:
+      entity_id: light.all
+
+- id: lights_on_coming_home
+  alias: Turn entry lights when coming home
+  trigger:
+  - platform: state
+    entity_id: group.all_persons
+    to: home
+  action:
+  - service: light.turn_on
+    data:
+      entity_id: light.entryway
+      brightnes: 255
