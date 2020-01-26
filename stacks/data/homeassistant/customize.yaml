@@ -6,3 +6,11 @@ binary_sensor.front_door_open:
   homebridge_hidden: true
 binary_sensor.front_door_sensor:
   homebridge_hidden: true
+sensor.aloe_soil_moisture:
+  device_class: humidity
+sensor.clyde_soil_moisture:
+  device_class: humidity
+sensor.magda_soil_moisture:
+  device_class: humidity
+sensor.parker_soil_moisture:
+  device_class: humidity

@@ -1,4 +1,4 @@
-version: '3.5'
+version: '3.4'
 services:
   hass:
     image: homeassistant/home-assistant:stable
@@ -6,11 +6,6 @@ services:
     - proxy
     volumes:
     - ./data/homeassistant:/config
-    healthcheck:
-      test: curl -f http://localhost:8123 || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 6
     deploy:
       replicas: 1
       labels:
@@ -23,9 +18,8 @@ services:
         constraints:
         - node.role == manager
       update_config:
-        parallelism: 2
+        parallelism: 1
         delay: 10s
-        order: start-first
         failure_action: rollback
       restart_policy:
         condition: on-failure
