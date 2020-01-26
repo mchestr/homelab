@@ -139,7 +139,7 @@
     data:
       entity_id: light.living_room
       brightness: 255
-  - delay: 00:10:00
+  - delay: 00:05:00
   - service: light.turn_on
     data:
       entity_id: light.living_room
