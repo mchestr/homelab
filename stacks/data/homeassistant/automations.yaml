@@ -8,19 +8,19 @@
     - sensor.magda_soil_moisture
     - sensor.parker_soil_moisture
     below: 40
-    for: "01:00:00"
+    for: 01:00:00
   condition:
     condition: or
     conditions:
     - condition: time
-      after: "08:00:00"
-      before: "22:00:00"
+      after: 08:00:00
+      before: '22:00:00'
       weekday:
       - sat
       - sun
     - condition: time
-      after: "07:00:00"
-      before: "09:00:00"
+      after: 07:00:00
+      before: 09:00:00
       weekday:
       - mon
       - tue
@@ -28,8 +28,8 @@
       - thu
       - fri
     - condition: time
-      after: "17:00:00"
-      before: "22:00:00"
+      after: '17:00:00'
+      before: '22:00:00'
       weekday:
       - mon
       - tue
@@ -40,8 +40,8 @@
   - service: tts.google_translate_say
     entity_id: media_player.family_room_speaker
     data_template:
-      message: "Hey Fam, {{ trigger.to_state.attributes.friendly_name }} needs some water!"
-
+      message: Hey Fam, {{ trigger.to_state.attributes.friendly_name }} needs some
+        water!
 - id: watering_alert_notify
   alias: Sensors - Notify - All - Humidity Below 40%
   trigger:
@@ -52,60 +52,56 @@
     - sensor.magda_soil_moisture
     - sensor.parker_soil_moisture
     below: 40
-    for: "01:00:00"
+    for: 01:00:00
   action:
   - service: notify.notify
     data_template:
-      title: "{{ trigger.to_state.attributes.friendly_name }} Needs water!"
-      message: "Currently: {{ trigger.to_state.state }}%"
-
+      title: '{{ trigger.to_state.attributes.friendly_name }} Needs water!'
+      message: 'Currently: {{ trigger.to_state.state }}%'
 - id: zoomba_bin_full
   alias: Vacuums - Notify - Zoomba - Bin Full
   trigger:
     platform: template
-    value_template: "{%if is_state_attr('vacuum.zoomba', 'bin_full', true) %}true{%endif%}"
+    value_template: '{%if is_state_attr(''vacuum.zoomba'', ''bin_full'', true) %}true{%endif%}'
   action:
   - service: notify.notify
     data_template:
-      title: "Zoomba bin is full!"
-      message: "Bin is full!"
-
+      title: Zoomba bin is full!
+      message: Bin is full!
 - id: cat_lights_away_on
   alias: Lights - ON - Cat Lamp - All Away, Sunset
   trigger:
+  - event: sunset
+    offset: -00:30:00
     platform: sun
-    event: sunset
-    offset: "-00:30:00"
   condition:
   - condition: state
     entity_id: group.all_persons
-    state: away
+    state: not_home
   action:
-  - service: light.turn_on
-    data:
-      entity_id: light.cat_lamp
+  - data:
       brightness_pct: 40
-
+      entity_id: light.cat_lamp
+    service: light.turn_on
 - id: cat_lights_away_off
   alias: Lights - OFF - Cat Lamp - All Away, Sunrise
   trigger:
+  - event: sunrise
+    offset: +00:00:00
     platform: sun
-    event: sunrise
-    offset: '+00:00:00'
   condition:
   - condition: state
     entity_id: group.all_persons
-    state: away
+    state: not_home
   action:
-  - service: light.turn_off
-    data:
+  - data:
       entity_id: light.cat_lamp
-
+    service: light.turn_off
 - id: wakeup_routine
   alias: Lights - ON - Morning Routine
   trigger:
     platform: time
-    at: "06:30:00"
+    at: 06:30:00
   condition:
     condition: and
     conditions:
@@ -144,20 +140,18 @@
     data:
       entity_id: light.living_room
       brightness: 255
-
 - id: lights_off_away
   alias: Lights - OFF - All - Leaving Home
   trigger:
-    platform: state
-    entity_id: group.all_persons
+  - entity_id: group.all_persons
+    for: 00:05:00
     from: home
-    to: away
-    for: "00:05:00"
+    platform: state
+    to: not_home
   action:
-  - service: light.turn_off
-    data:
+  - data:
       entity_id: light.all
-
+    service: light.turn_off
 - id: lights_on_coming_home
   alias: Lights - ON - Entryway - Coming Home
   trigger:
@@ -168,4 +162,4 @@
   - service: light.turn_on
     data:
       entity_id: light.entryway
-      brightnes: 255
+      brightness: 255

@@ -122,7 +122,7 @@ fi;
 
 echo "Generate Home Assistant Secrets..."
 ENV_SECRETS=("AUGUST_USERNAME" "AUGUST_PASSWORD" "GOOGLE_ASSISTANT_PROJECT_ID" "VACUUM_ROOMBA_USERNAME"
-             "VACUUM_ROOMBA_PASSWORD")
+             "VACUUM_ROOMBA_PASSWORD" "TUYA_USERNAME" "TUYA_PASSWORD" "TUYA_COUNTRY_CODE")
 for secret in "${ENV_SECRETS[@]}"; do
   if [[ -z "${!secret}" ]]; then
     echo "$secret=";
@@ -145,4 +145,7 @@ google_assistant_project_id: "${GOOGLE_ASSISTANT_PROJECT_ID}"
 vacuum_roomba_username: "${VACUUM_ROOMBA_USERNAME}"
 vacuum_roomba_password: "${VACUUM_ROOMBA_PASSWORD}"
 base_url: "https://hass.${SUBDOMAIN}"
+tuya_username: "${TUYA_USERNAME}"
+tuya_password: "${TUYA_PASSWORD}"
+tuya_country_code: "${TUYA_COUNTRY_CODE}"
 EOF

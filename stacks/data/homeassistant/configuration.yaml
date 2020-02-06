@@ -22,12 +22,20 @@ light:
 - platform: group
   name: all
   entities:
-  - light.kitchen
+  - light.kitchen_lights
   - light.den
   - light.bedroom
   - light.living_room
   - light.entryway
   - light.bathroom
+- platform: group
+  name: Kitchen Lights
+  entities:
+  - light.kitchen_light_rail_0
+  - light.kitchen_light_rail_1
+  - light.kitchen_light_rail_2
+  - light.kitchen_light_1
+  - light.kitchen_light_2
 
 sensor:
 - platform: template
@@ -88,3 +96,8 @@ tplink:
   switch:
   - host: 192.168.1.7
   - host: 192.168.1.5
+
+tuya:
+  username: !secret tuya_username
+  password: !secret tuya_password
+  country_code: !secret tuya_country_code
